@@ -30,6 +30,10 @@ mod roots;
 pub use roots::Roots;
 pub use roots::{sqrt, cbrt, nth_root};
 
+mod power10;
+pub use power10::Power10;
+pub use power10::{is_power_of_ten};
+
 pub trait Integer: Sized + Num + PartialOrd + Ord + Eq {
     /// Floored integer division.
     ///
