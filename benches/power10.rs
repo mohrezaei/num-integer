@@ -7,16 +7,19 @@ extern crate test;
 use num_integer::Power10;
 use test::{black_box, Bencher};
 use num_integer::is_power_of_ten;
+use num_traits::PrimInt;
+use num_traits::One;
+use num_traits::Zero;
 
 #[bench]
 fn benchp10_u64_only_powers_of_ten(b: &mut Bencher) {
-    let v = powers_10_vec_u64();
+    let v = powers_10_vec::<u64>();
     bench_pow10_slice(b, &v, is_power_of_ten);
 }
 
 #[bench]
 fn benchp10_u64_up_to_10000(b: &mut Bencher) {
-    let v = first_10000_vec_u64();
+    let v = first_10000_vec::<u64>();
     bench_pow10_slice(b, &v, is_power_of_ten);
 }
 
@@ -28,13 +31,13 @@ fn benchp10_u64_10000_random(b: &mut Bencher) {
 
 #[bench]
 fn benchp10_u64_only_powers_of_ten_simple(b: &mut Bencher) {
-    let v = powers_10_vec_u64();
+    let v = powers_10_vec::<u64>();
     bench_pow10_slice(b, &v, is_pow_10_simple_u64);
 }
 
 #[bench]
 fn benchp10_u64_up_to_10000_simple(b: &mut Bencher) {
-    let v = first_10000_vec_u64();
+    let v = first_10000_vec::<u64>();
     bench_pow10_slice(b, &v, is_pow_10_simple_u64);
 }
 
@@ -46,13 +49,13 @@ fn benchp10_u64_10000_random_simple(b: &mut Bencher) {
 
 #[bench]
 fn benchp10_u64_only_powers_of_ten_rev_search(b: &mut Bencher) {
-    let v = powers_10_vec_u64();
+    let v = powers_10_vec::<u64>();
     bench_pow10_slice(b, &v, is_pow_10_rev_search_u64);
 }
 
 #[bench]
 fn benchp10_u64_up_to_10000_rev_search(b: &mut Bencher) {
-    let v = first_10000_vec_u64();
+    let v = first_10000_vec::<u64>();
     bench_pow10_slice(b, &v, is_pow_10_rev_search_u64);
 }
 
@@ -64,13 +67,13 @@ fn benchp10_u64_10000_random_rev_search(b: &mut Bencher) {
 
 #[bench]
 fn benchp10_u64_only_powers_of_ten_lz(b: &mut Bencher) {
-    let v = powers_10_vec_u64();
+    let v = powers_10_vec::<u64>();
     bench_pow10_slice(b, &v, is_pow_10_lz_u64);
 }
 
 #[bench]
 fn benchp10_u64_up_to_10000_lz(b: &mut Bencher) {
-    let v = first_10000_vec_u64();
+    let v = first_10000_vec::<u64>();
     bench_pow10_slice(b, &v, is_pow_10_lz_u64);
 }
 
@@ -166,33 +169,6 @@ fn is_pow_10_rev_search_u64(v: u64) -> bool {
     false
 }
 
-fn powers_10_vec_u64() -> Vec<u64> {
-    let mut v = Vec::new();
-    let mut count = 0;
-    let mut x: u64 = 1;
-    let end: u64 = <u64>::max_value() / 10;
-    while count < 10000 {
-        v.push(x);
-        if x > end {
-            x = 1;
-        } else {
-            x *= 10;
-        }
-        count += 1;
-    }
-    v
-}
-
-fn first_10000_vec_u64() -> Vec<u64> {
-    let mut v = Vec::new();
-    let mut x: u64 = 0;
-    while x < 10000 {
-        v.push(x);
-        x += 1;
-    }
-    v
-}
-
 fn random_10000_vec_u64() -> Vec<u64> {
     let mut v = Vec::new();
     let mut x: u64 = 0;
@@ -207,13 +183,13 @@ fn random_10000_vec_u64() -> Vec<u64> {
 
 #[bench]
 fn benchp10_u16_only_powers_of_ten(b: &mut Bencher) {
-    let v = powers_10_vec_u16();
+    let v = powers_10_vec::<u16>();
     bench_pow10_slice(b, &v, is_power_of_ten);
 }
 
 #[bench]
 fn benchp10_u16_up_to_10000(b: &mut Bencher) {
-    let v = first_10000_vec_u16();
+    let v = first_10000_vec::<u16>();
     bench_pow10_slice(b, &v, is_power_of_ten);
 }
 
@@ -225,13 +201,13 @@ fn benchp10_u16_10000_random(b: &mut Bencher) {
 
 #[bench]
 fn benchp10_u16_only_powers_of_ten_simple(b: &mut Bencher) {
-    let v = powers_10_vec_u16();
+    let v = powers_10_vec::<u16>();
     bench_pow10_slice(b, &v, is_pow_10_simple_u16);
 }
 
 #[bench]
 fn benchp10_u16_up_to_10000_simple(b: &mut Bencher) {
-    let v = first_10000_vec_u16();
+    let v = first_10000_vec::<u16>();
     bench_pow10_slice(b, &v, is_pow_10_simple_u16);
 }
 
@@ -243,13 +219,13 @@ fn benchp10_u16_10000_random_simple(b: &mut Bencher) {
 
 #[bench]
 fn benchp10_u16_only_powers_of_ten_rev_search(b: &mut Bencher) {
-    let v = powers_10_vec_u16();
+    let v = powers_10_vec::<u16>();
     bench_pow10_slice(b, &v, is_pow_10_rev_search_u16);
 }
 
 #[bench]
 fn benchp10_u16_up_to_10000_rev_search(b: &mut Bencher) {
-    let v = first_10000_vec_u16();
+    let v = first_10000_vec::<u16>();
     bench_pow10_slice(b, &v, is_pow_10_rev_search_u16);
 }
 
@@ -286,33 +262,6 @@ fn is_pow_10_rev_search_u16(v: u16) -> bool {
     
 }
 
-fn powers_10_vec_u16() -> Vec<u16> {
-    let mut v = Vec::new();
-    let mut count = 0;
-    let mut x: u16 = 1;
-    let end: u16 = <u16>::max_value() / 10;
-    while count < 10000 {
-        v.push(x);
-        if x > end {
-            x = 1;
-        } else {
-            x *= 10;
-        }
-        count += 1;
-    }
-    v
-}
-
-fn first_10000_vec_u16() -> Vec<u16> {
-    let mut v = Vec::new();
-    let mut x: u16 = 0;
-    while x < 10000 {
-        v.push(x);
-        x += 1;
-    }
-    v
-}
-
 fn random_10000_vec_u16() -> Vec<u16> {
     let mut v = Vec::new();
     let mut x: u16 = 0;
@@ -326,7 +275,7 @@ fn random_10000_vec_u16() -> Vec<u16> {
 
 #[bench]
 fn benchp10_u8_only_powers_of_ten(b: &mut Bencher) {
-    let v = powers_10_vec_u8();
+    let v = powers_10_vec::<u8>();
     bench_pow10_slice(b, &v, is_power_of_ten);
 }
 
@@ -338,7 +287,7 @@ fn benchp10_u8_10000_random(b: &mut Bencher) {
 
 #[bench]
 fn benchp10_u8_only_powers_of_ten_simple(b: &mut Bencher) {
-    let v = powers_10_vec_u8();
+    let v = powers_10_vec::<u8>();
     bench_pow10_slice(b, &v, is_pow_10_simple_u8);
 }
 
@@ -350,7 +299,7 @@ fn benchp10_u8_10000_random_simple(b: &mut Bencher) {
 
 #[bench]
 fn benchp10_u8_only_powers_of_ten_hash(b: &mut Bencher) {
-    let v = powers_10_vec_u8();
+    let v = powers_10_vec::<u8>();
     bench_pow10_slice(b, &v, is_pow_10_hash_u8);
 }
 
@@ -373,23 +322,6 @@ fn is_pow_10_hash_u8(v: u8) -> bool {
     u == POWER10_HASH_U8[(u & 7) as usize]
 }
 
-fn powers_10_vec_u8() -> Vec<u8> {
-    let mut v = Vec::new();
-    let mut count = 0;
-    let mut x: u8 = 1;
-    let end: u8 = <u8>::max_value() / 10;
-    while count < 10000 {
-        v.push(x);
-        if x > end {
-            x = 1;
-        } else {
-            x *= 10;
-        }
-        count += 1;
-    }
-    v
-}
-
 fn random_10000_vec_u8() -> Vec<u8> {
     let mut v = Vec::new();
     let mut x: u32 = 0;
@@ -397,6 +329,38 @@ fn random_10000_vec_u8() -> Vec<u8> {
     while x < 10000 {
         v.push(rng.next_u8());
         x += 1;
+    }
+    v
+}
+
+fn first_10000_vec<T: PrimInt + One + Zero>() -> Vec<T> {
+    let mut v = Vec::with_capacity(10000);
+    let mut x: T = <T>::zero();
+    let one: T = <T>::one();
+    let ten = (one << 3) + (one << 1);
+    let tenk = ten * ten * ten * ten;
+    while x < tenk {
+        v.push(x);
+        x = x + one;
+    }
+    v
+}
+
+fn powers_10_vec<T: PrimInt + One>() -> Vec<T> {
+    let mut v = Vec::with_capacity(10000);
+    let mut count = 0;
+    let one = <T>::one();
+    let mut x: T = one;
+    let ten = (one << 3) + (one << 1);
+    let end: T = <T>::max_value() / ten;
+    while count < 10000 {
+        v.push(x);
+        if x > end {
+            x = one;
+        } else {
+            x = x * ten;
+        }
+        count += 1;
     }
     v
 }
