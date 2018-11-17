@@ -21,23 +21,39 @@ pub fn is_power_of_ten<T: Power10>(x: T) -> bool {
     x.is_power_of_ten()
 }
 
-// implementation note: the is_power_of_ten algorithm is based on a perfect hash setup with very simple hash functions
-// hash functions only use 32-bit operations for portable-speed
-// this approach is about 20% faster than using leading_zeros() (which is used for fast log operations)
+// Implementation note: the is_power_of_ten algorithm for u16/u32 is based on a
+// perfect hash setup with very simple hash functions. These hash functions only use 32-bit
+// operations for portable-speed.
+// This approach is slightly better than leading_zeros() (which is used u64 and fast logarithms)
 static POWER10_HASH_U16: [u32;8] = [1, 10, 10000, 0, 100, 1000, 0, 0];
 static POWER10_HASH_U32: [u32;16] = [10000, 1, 10000000, 0, 100, 0, 100000, 100000000, 1000, 0, 10, 1000000000, 0, 1000000, 0, 0];
-static POWER10_HASH_U64: [u64;32] = [1, 100000000000, 10000000000000000, 0, 1000000, 10, 0, 10000000000000, 10000000,
-    0, 1000, 0, 0, 0, 1000000000000, 0, 1000000000000000, 0, 100000000000000,
-    1000000000000000000, 100, 100000000, 100000000000000000, 0, 10000000000000000000,
-    10000, 100000, 0, 1000000000, 0, 10000000000, 0];
+static POWER10_LZ_U64: [u64; 65] = [10000000000000000000, <u64>::max_value(), <u64>::max_value(), <u64>::max_value(),
+    1000000000000000000, <u64>::max_value(), <u64>::max_value(),
+    100000000000000000, <u64>::max_value(), <u64>::max_value(),
+    10000000000000000, <u64>::max_value(), <u64>::max_value(), <u64>::max_value(),
+    1000000000000000, <u64>::max_value(), <u64>::max_value(),
+    100000000000000, <u64>::max_value(), <u64>::max_value(),
+    10000000000000, <u64>::max_value(), <u64>::max_value(), <u64>::max_value(),
+    1000000000000, <u64>::max_value(), <u64>::max_value(),
+    100000000000, <u64>::max_value(), <u64>::max_value(),
+    10000000000, <u64>::max_value(), <u64>::max_value(), <u64>::max_value(),
+    1000000000, <u64>::max_value(), <u64>::max_value(),
+    100000000, <u64>::max_value(), <u64>::max_value(),
+    10000000, <u64>::max_value(), <u64>::max_value(), <u64>::max_value(),
+    1000000, <u64>::max_value(), <u64>::max_value(),
+    100000, <u64>::max_value(), <u64>::max_value(),
+    10000, <u64>::max_value(), <u64>::max_value(), <u64>::max_value(),
+    1000, <u64>::max_value(), <u64>::max_value(),
+    100, <u64>::max_value(), <u64>::max_value(),
+    10, <u64>::max_value(), <u64>::max_value(),
+    1, 1];
 
 // implementation note: reverse search is a bit faster than hash lookup for u8
 #[inline]
 fn is_pow10_u8(v: u8) -> bool {
     if v >= 100 { return v == 100; }
     if v >= 10 { return v == 10; }
-    if v >= 1 { return v == 1; }
-    false
+    v == 1
 }
 
 // implementation note: at least on x86-64, 32bit ops are far faster than 16 bit ones, even ==
@@ -54,11 +70,7 @@ fn is_pow10_u32(v: u32) -> bool {
 
 #[inline]
 fn is_pow10_u64(v: u64) -> bool {
-    let mut hash: u32 = v as u32;
-    hash ^= hash >> 3;
-    hash = hash.rotate_right(1);
-    hash ^= hash >> 23;
-    v == POWER10_HASH_U64[(hash & 31) as usize]
+    v == POWER10_LZ_U64[(v.leading_zeros() & 63) as usize] // & 63 may look redundant, but it prevents a range check
 }
 
 #[cfg(target_pointer_width = "64")]
@@ -90,7 +102,7 @@ macro_rules! hide_u128 {
         #[inline]
         pub fn is_pow10_u128(v: $T) -> bool {
             let mut hash: u32 = v as u32 | (((v as u64) >> 32) as u32);
-            hash = hash.wrapping_mul(1249991743).rotate_right(25);
+            hash = hash.wrapping_mul(1249991743) >> 25;
             v == POWER10_HASH_U128[(hash & 63) as usize]
         }
 

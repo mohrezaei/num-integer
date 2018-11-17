@@ -12,6 +12,18 @@ use num_traits::One;
 use num_traits::Zero;
 
 #[bench]
+fn benchp10_u32_only_powers_of_ten(b: &mut Bencher) {
+    let v = powers_10_vec::<u32>();
+    bench_pow10_slice(b, &v, is_power_of_ten);
+}
+
+#[bench]
+fn benchp10_u32_up_to_10000(b: &mut Bencher) {
+    let v = first_10000_vec::<u32>();
+    bench_pow10_slice(b, &v, is_power_of_ten);
+}
+
+#[bench]
 fn benchp10_u64_only_powers_of_ten(b: &mut Bencher) {
     let v = powers_10_vec::<u64>();
     bench_pow10_slice(b, &v, is_power_of_ten);

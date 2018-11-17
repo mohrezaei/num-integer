@@ -10,6 +10,7 @@ macro_rules! unsigned_power10 {
             #[test]
             fn test_pow_10() {
                 assert_eq!((0 as $T).is_power_of_ten(), false);
+                assert_eq!(<$T>::max_value().is_power_of_ten(), false);
                 let mut x: $T = 1;
                 let end: $T = <$T>::max_value() / 10;
                 while x < end {
