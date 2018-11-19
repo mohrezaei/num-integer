@@ -7,9 +7,34 @@ extern crate test;
 use num_integer::Power10;
 use test::{black_box, Bencher};
 use num_integer::is_power_of_ten;
+use num_integer::floor_log10;
 use num_traits::PrimInt;
 use num_traits::One;
 use num_traits::Zero;
+
+#[bench]
+fn benchl10_u32_only_powers_of_ten(b: &mut Bencher) {
+    let v = powers_10_vec::<u32>();
+    bench_log10_slice(b, &v, floor_log10);
+}
+
+#[bench]
+fn benchl10_u32_up_to_10000(b: &mut Bencher) {
+    let v = first_10000_vec::<u32>();
+    bench_log10_slice(b, &v, floor_log10);
+}
+
+#[bench]
+fn benchl10_u64_only_powers_of_ten(b: &mut Bencher) {
+    let v = powers_10_vec::<u64>();
+    bench_log10_slice(b, &v, floor_log10);
+}
+
+#[bench]
+fn benchl10_u64_up_to_10000(b: &mut Bencher) {
+    let v = first_10000_vec::<u64>();
+    bench_log10_slice(b, &v, floor_log10);
+}
 
 #[bench]
 fn benchp10_u32_only_powers_of_ten(b: &mut Bencher) {
@@ -386,6 +411,18 @@ fn bench_pow10_slice<T: Power10 + Copy, F>(b: &mut Bencher, slice: &[T], func: F
             if func(*i) {
                 sum += 1;
             }
+        }
+        black_box(sum);
+    });
+}
+
+#[inline]
+fn bench_log10_slice<T: Power10 + Copy, F>(b: &mut Bencher, slice: &[T], func: F)
+    where F: Fn(T) -> u32 {
+    b.iter(|| {
+        let mut sum = 0;
+        for i in slice.iter() {
+            sum += func(*i);
         }
         black_box(sum);
     });
