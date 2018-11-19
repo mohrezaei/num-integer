@@ -15,6 +15,7 @@ pub trait Power10: Integer {
     fn is_power_of_ten(&self) -> bool;
 
     /// Returns the base 10 logarithm value, truncated down.
+    /// Returns zero for zero.
     ///
     /// # Examples
     ///
@@ -24,6 +25,46 @@ pub trait Power10: Integer {
     /// assert_eq!(4u32.floor_log10(), 0);
     /// ~~~
     fn floor_log10(&self) -> u32; //note: u32 return type to allow BigInt types to implement. 10^(2^32) is 4 billion digits
+
+    /// Returns a power of ten greater than or equal to the supplied value.
+    /// If the next power of ten is larger than `max_value()`, 0 is returned. 
+    ///
+    /// # Examples
+    ///
+    /// ~~~
+    /// use num_integer::Power10;
+    /// assert_eq!(100u32.wrapping_next_power_of_ten(), 100);
+    /// assert_eq!(4u32.wrapping_next_power_of_ten(), 10);
+    /// assert_eq!(20_000u16.wrapping_next_power_of_ten(), 0);
+    /// ~~~
+    fn wrapping_next_power_of_ten(&self) -> Self;
+
+    /// Returns a power of ten greater than or equal to the supplied value.
+    /// If the next power of ten is larger than `max_value()`, None is returned.
+    ///
+    /// # Examples
+    ///
+    /// ~~~
+    /// use num_integer::Power10;
+    /// assert_eq!(100u32.checked_next_power_of_ten().unwrap(), 100);
+    /// assert_eq!(4u32.checked_next_power_of_ten().unwrap(), 10);
+    /// assert_eq!(20_000u16.checked_next_power_of_ten(), None);
+    /// ~~~
+    fn checked_next_power_of_ten(&self) -> Option<Self>;
+
+    /// Returns a power of ten greater than or equal to the supplied value.
+    /// If the next power of ten is larger than `max_value()`, 0 is returned in release mode.
+    /// If the next power of ten is larger than `max_value()`, the function will panic in debug mode.
+    ///
+    /// # Examples
+    ///
+    /// ~~~
+    /// use num_integer::Power10;
+    /// assert_eq!(100u32.checked_next_power_of_ten().unwrap(), 100);
+    /// assert_eq!(4u32.checked_next_power_of_ten().unwrap(), 10);
+    /// assert_eq!(20_000u16.checked_next_power_of_ten(), None);
+    /// ~~~
+    fn next_power_of_ten(&self) -> Self;
 }
 
 /// Returns `true` if the number is a power of 10.
@@ -38,10 +79,32 @@ pub fn floor_log10<T: Power10>(x: T) -> u32 {
     x.floor_log10()
 }
 
+/// Returns a power of ten greater than or equal to the supplied value.
+/// If the next power of ten is larger than `max_value()`, 0 is returned. 
+#[inline]
+pub fn wrapping_next_power_of_ten<T: Power10>(x: T) -> T {
+    x.wrapping_next_power_of_ten()
+}
+
+/// Returns a power of ten greater than or equal to the supplied value.
+/// If the next power of ten is larger than `max_value()`, None is returned.
+#[inline]
+pub fn checked_next_power_of_ten<T: Power10>(x: T) -> Option<T> {
+    x.checked_next_power_of_ten()
+}
+
+/// Returns a power of ten greater than or equal to the supplied value.
+/// If the next power of ten is larger than `max_value()`, 0 is returned in release more
+/// and panics in debug mode.
+#[inline]
+pub fn next_power_of_ten<T: Power10>(x: T) -> T {
+    x.next_power_of_ten()
+}
+
 // Implementation note: the is_power_of_ten algorithm for u16/u32 is based on a
 // perfect hash setup with very simple hash functions. These hash functions only use 32-bit
 // operations for portable-speed.
-// This approach is slightly better than leading_zeros() (which is used u64 and fast logarithms)
+// This approach is slightly better than leading_zeros() (which is used for u64 and fast logarithms)
 static POWER10_HASH_U16: [u32;8] = [1, 10, 10000, 0, 100, 1000, 0, 0];
 static POWER10_HASH_U32: [u32;16] = [10000, 1, 10000000, 0, 100, 0, 100000, 100000000, 1000, 0, 10, 1000000000, 0, 1000000, 0, 0];
 static POWER10_LZ_U64: [u64; 65] = [
@@ -103,19 +166,7 @@ fn is_pow10_usize(v: usize) -> bool {
     is_pow10_u32(v as u32)
 }
 
-#[inline]
-fn floor_log10_u8(v: u8) -> u32 {
-    if v >= 100 { return 2; }
-    if v >= 10 { return 1; }
-    0
-}
-
-#[inline]
-fn floor_log10_u16(v: u16) -> u32 {
-    floor_log10_u32(v as u32)
-}
-
-static POWER10_DIGITS_U32: [(u32, u32); 33] = [
+static POWER10_DIGITS_U32: [(u32, u32); 34] = [
     (8, 1_000_000_000), (8, 1_000_000_000),
     (8, 1_000_000_000), (8, 1000000000), (8, 1000000000),
     (7, 100000000), (7, 100000000), (7, 100000000),
@@ -126,9 +177,9 @@ static POWER10_DIGITS_U32: [(u32, u32); 33] = [
     (2, 1000), (2, 1000), (2, 1000),
     (1, 100), (1, 100), (1, 100),
     (0, 10), (0, 10), (0, 10), (0, 10),
-    (0, 1)];
+    (0, 1), (0, 1)];
 
-static POWER10_DIGITS_U64: [(u32, u64); 65] = [
+static POWER10_DIGITS_U64: [(u32, u64); 66] = [
     (18, 10000000000000000000), (18, 10000000000000000000), (18, 10000000000000000000), (18, 10000000000000000000),
     (17, 1000000000000000000), (17, 1000000000000000000), (17, 1000000000000000000),
     (16, 100000000000000000), (16, 100000000000000000), (16, 100000000000000000),
@@ -148,7 +199,19 @@ static POWER10_DIGITS_U64: [(u32, u64); 65] = [
     (2, 1000), (2, 1000), (2, 1000),
     (1, 100), (1, 100), (1, 100),
     (0, 10), (0, 10), (0, 10), (0, 10),
-    (0, 1)];
+    (0, 1), (0,1)];
+
+#[inline]
+fn floor_log10_u8(v: u8) -> u32 {
+    if v >= 100 { return 2; }
+    if v >= 10 { return 1; }
+    0
+}
+
+#[inline]
+fn floor_log10_u16(v: u16) -> u32 {
+    floor_log10_u32(v as u32)
+}
 
 #[inline]
 fn floor_log10_u32(v: u32) -> u32 {
@@ -176,6 +239,72 @@ fn floor_log10_usize(v: usize) -> u32 {
     floor_log10_u32(v as u32)
 }
 
+#[inline]
+fn wrapping_next_power_of_ten_u8(v: u8) -> u8 {
+    if v > 100 { return 0; }
+    if v > 10 { return 100; }
+    if v > 1 { return 10; }
+    1
+}
+
+#[inline]
+fn wrapping_next_power_of_ten_u16(v: u16) -> u16 {
+    if v > 10000 { return 0; }
+    wrapping_next_power_of_ten_u32(v as u32) as u16
+}
+
+#[inline]
+fn wrapping_next_power_of_ten_u32(v: u32) -> u32 {
+    if v > POWER10_DIGITS_U32[0].1 {
+        return 0;
+    }
+    let lz = v.leading_zeros();
+    let (_, next_pow10) = POWER10_DIGITS_U32[(lz - 1) as usize];
+    let (_, pow10) = POWER10_DIGITS_U32[lz as usize];
+    let (_, prev_pow10) = POWER10_DIGITS_U32[(lz + 1) as usize];
+    if v == prev_pow10 {
+        prev_pow10
+    } else if v > prev_pow10 {
+        next_pow10
+    } else {
+        pow10
+    }
+}
+
+#[inline]
+fn wrapping_next_power_of_ten_u64(v: u64) -> u64 {
+    let lz = v.leading_zeros();
+    if lz == 0 {
+        let max = POWER10_DIGITS_U64[0].1;
+        if v > max {
+            return 0;
+        }
+        return max;
+    }
+    let (_, next_pow10) = POWER10_DIGITS_U64[(lz - 1) as usize];
+    let (_, pow10) = POWER10_DIGITS_U64[lz as usize];
+    let (_, prev_pow10) = POWER10_DIGITS_U64[(lz + 1) as usize];
+    if v == prev_pow10 {
+        prev_pow10
+    } else if v > prev_pow10 {
+        next_pow10
+    } else {
+        pow10
+    }
+}
+
+#[cfg(target_pointer_width = "64")]
+#[inline]
+fn wrapping_next_power_of_ten_usize(v: usize) -> usize {
+    wrapping_next_power_of_ten_u64(v as u64) as usize
+}
+
+#[cfg(target_pointer_width = "32")]
+#[inline]
+fn wrapping_next_power_of_ten_usize(v: usize) -> usize {
+    wrapping_next_power_of_ten_u32(v as u32) as usize
+}
+
 macro_rules! hide_u128 {
     ($T:ty) => {
         static POWER10_HASH_U128: [$T; 64] = [100000000000000000000000000000000000, 0, 100000000000000000000000000000000,
@@ -197,7 +326,7 @@ macro_rules! hide_u128 {
             v == POWER10_HASH_U128[(hash & 63) as usize]
         }
         
-        static POWER10_DIGITS_U128: [(u32, u128); 129] = [
+        static POWER10_DIGITS_U128: [(u32, u128); 130] = [
             (37, 100000000000000000000000000000000000000),
             (37, 100000000000000000000000000000000000000), (37, 100000000000000000000000000000000000000), (37, 100000000000000000000000000000000000000), (37, 100000000000000000000000000000000000000),
             (36, 10000000000000000000000000000000000000), (36, 10000000000000000000000000000000000000), (36, 10000000000000000000000000000000000000),
@@ -237,13 +366,31 @@ macro_rules! hide_u128 {
             (2, 1000), (2, 1000), (2, 1000),
             (1, 100), (1, 100), (1, 100),
             (0, 10), (0, 10), (0, 10), (0, 10),
-            (0, 1)];
+            (0, 1), (0, 1)];
 
         #[inline]
         fn floor_log10_u128(v: $T) -> u32 {
             let lz = v.leading_zeros();
             let (digits, pow10) = POWER10_DIGITS_U128[lz as usize];
             digits + ((v >= pow10) as u32)
+        }
+        
+        #[inline]
+        fn wrapping_next_power_of_ten_u128(v: u128) -> u128 {
+            if v > POWER10_DIGITS_U128[0].1 {
+                return 0;
+            }
+            let lz = v.leading_zeros();
+            let (_, next_pow10) = POWER10_DIGITS_U128[(lz - 1) as usize];
+            let (_, pow10) = POWER10_DIGITS_U128[lz as usize];
+            let (_, prev_pow10) = POWER10_DIGITS_U128[(lz + 1) as usize];
+            if v == prev_pow10 {
+                prev_pow10
+            } else if v > prev_pow10 {
+                next_pow10
+            } else {
+                pow10
+            }
         }
     }
 }
@@ -252,7 +399,7 @@ macro_rules! hide_u128 {
 hide_u128!(u128);
 
 macro_rules! unsigned_power10 {
-    ($T:ty, $pow_fn: ident, $log_fn: ident) => {
+    ($T:ty, $pow_fn: ident, $log_fn: ident, $wrap_next_fn: ident) => {
         impl Power10 for $T {
             #[inline]
             fn is_power_of_ten(&self) -> bool {
@@ -263,17 +410,47 @@ macro_rules! unsigned_power10 {
             fn floor_log10(&self) -> u32 {
                 $log_fn(*self)
             }
+
+            #[inline]
+            fn wrapping_next_power_of_ten(&self) -> $T {
+                $wrap_next_fn(*self)
+            }
+
+            #[inline]
+            fn checked_next_power_of_ten(&self) -> Option<$T> {
+                let x = self.wrapping_next_power_of_ten();
+                if x == 0 {
+                    return None;
+                }
+                Some(x)
+            }
+
+            #[cfg(debug_assertions)]
+            #[inline]
+            fn next_power_of_ten(&self) -> $T {
+                let x = self.wrapping_next_power_of_ten();
+                if x == 0 {
+                    panic!("overflow in next_power_of_ten for {}", *self);
+                }
+                x
+            }
+
+            #[cfg(not(debug_assertions))]
+            #[inline]
+            fn next_power_of_ten(&self) -> $T {
+                self.wrapping_next_power_of_ten()
+            }
         }
     };
 }
 
-unsigned_power10!(u8, is_pow10_u8, floor_log10_u8); //https://github.com/rust-lang/rust/issues/29599
-unsigned_power10!(u16, is_pow10_u16, floor_log10_u16);
-unsigned_power10!(u32, is_pow10_u32, floor_log10_u32);
-unsigned_power10!(u64, is_pow10_u64, floor_log10_u64);
+unsigned_power10!(u8, is_pow10_u8, floor_log10_u8, wrapping_next_power_of_ten_u8); //https://github.com/rust-lang/rust/issues/29599
+unsigned_power10!(u16, is_pow10_u16, floor_log10_u16, wrapping_next_power_of_ten_u16);
+unsigned_power10!(u32, is_pow10_u32, floor_log10_u32, wrapping_next_power_of_ten_u32);
+unsigned_power10!(u64, is_pow10_u64, floor_log10_u64, wrapping_next_power_of_ten_u64);
 #[cfg(has_i128)]
-unsigned_power10!(u128, is_pow10_u128, floor_log10_u128);
-unsigned_power10!(usize, is_pow10_usize, floor_log10_usize);
+unsigned_power10!(u128, is_pow10_u128, floor_log10_u128, wrapping_next_power_of_ten_u128);
+unsigned_power10!(usize, is_pow10_usize, floor_log10_usize, wrapping_next_power_of_ten_usize);
 
 
 
