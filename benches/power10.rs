@@ -4,13 +4,13 @@ extern crate num_integer;
 extern crate num_traits;
 extern crate test;
 
-use num_integer::Power10;
-use test::{black_box, Bencher};
-use num_integer::is_power_of_ten;
 use num_integer::floor_log10;
-use num_traits::PrimInt;
+use num_integer::is_power_of_ten;
+use num_integer::Power10;
 use num_traits::One;
+use num_traits::PrimInt;
 use num_traits::Zero;
+use test::{black_box, Bencher};
 
 #[bench]
 fn benchl10_u32_only_powers_of_ten(b: &mut Bencher) {
@@ -120,10 +120,72 @@ fn benchp10_u64_10000_random_lz(b: &mut Bencher) {
     bench_pow10_slice(b, &v, is_pow_10_lz_u64);
 }
 
-static POWER10_LZ_U64: [u64; 64] = [10000000000000000000, 0, 0, 0, 1000000000000000000, 0, 0, 100000000000000000, 0, 0, 10000000000000000,
-    0, 0, 0, 1000000000000000, 0, 0, 100000000000000, 0, 0, 10000000000000, 0, 0, 0, 1000000000000,
-    0, 0, 100000000000, 0, 0, 10000000000, 0, 0, 0, 1000000000, 0, 0, 100000000, 0, 0, 10000000,
-    0, 0, 0, 1000000, 0, 0, 100000, 0, 0, 10000, 0, 0, 0, 1000, 0, 0, 100, 0, 0, 10, 0, 0, 1];
+static POWER10_LZ_U64: [u64; 64] = [
+    10000000000000000000,
+    0,
+    0,
+    0,
+    1000000000000000000,
+    0,
+    0,
+    100000000000000000,
+    0,
+    0,
+    10000000000000000,
+    0,
+    0,
+    0,
+    1000000000000000,
+    0,
+    0,
+    100000000000000,
+    0,
+    0,
+    10000000000000,
+    0,
+    0,
+    0,
+    1000000000000,
+    0,
+    0,
+    100000000000,
+    0,
+    0,
+    10000000000,
+    0,
+    0,
+    0,
+    1000000000,
+    0,
+    0,
+    100000000,
+    0,
+    0,
+    10000000,
+    0,
+    0,
+    0,
+    1000000,
+    0,
+    0,
+    100000,
+    0,
+    0,
+    10000,
+    0,
+    0,
+    0,
+    1000,
+    0,
+    0,
+    100,
+    0,
+    0,
+    10,
+    0,
+    0,
+    1,
+];
 
 #[inline]
 fn is_pow_10_lz_u64(v: u64) -> bool {
@@ -132,13 +194,26 @@ fn is_pow_10_lz_u64(v: u64) -> bool {
 
 #[inline]
 fn is_pow_10_simple_u64(v: u64) -> bool {
-    v == 1 || v == 10 || v == 100 || 
-        v == 1_000 || v == 10_000 || v == 100_000 || 
-        v == 1_000_000 || v == 10_000_000 || v == 100_000_000 || 
-        v == 1_000_000_000 || v == 10_000_000_000 || v == 100_000_000_000 || 
-        v == 1_000_000_000_000 || v == 10_000_000_000_000 || v == 100_000_000_000_000 || 
-        v == 1_000_000_000_000_000 || v == 10_000_000_000_000_000 || v == 100_000_000_000_000_000 || 
-        v == 1_000_000_000_000_000_000u64 || v == 10_000_000_000_000_000_000
+    v == 1
+        || v == 10
+        || v == 100
+        || v == 1_000
+        || v == 10_000
+        || v == 100_000
+        || v == 1_000_000
+        || v == 10_000_000
+        || v == 100_000_000
+        || v == 1_000_000_000
+        || v == 10_000_000_000
+        || v == 100_000_000_000
+        || v == 1_000_000_000_000
+        || v == 10_000_000_000_000
+        || v == 100_000_000_000_000
+        || v == 1_000_000_000_000_000
+        || v == 10_000_000_000_000_000
+        || v == 100_000_000_000_000_000
+        || v == 1_000_000_000_000_000_000u64
+        || v == 10_000_000_000_000_000_000
 }
 
 #[inline]
@@ -209,14 +284,15 @@ fn is_pow_10_rev_search_u64(v: u64) -> bool {
 fn random_10000_vec_u64() -> Vec<u64> {
     let mut v = Vec::new();
     let mut x: u64 = 0;
-    let mut rng = SplitMix { v: 0xCAFE_1234_FEED_5678 };
+    let mut rng = SplitMix {
+        v: 0xCAFE_1234_FEED_5678,
+    };
     while x < 10000 {
         v.push(rng.next_u64());
         x += 1;
     }
     v
 }
-
 
 #[bench]
 fn benchp10_u16_only_powers_of_ten(b: &mut Bencher) {
@@ -274,8 +350,7 @@ fn benchp10_u16_10000_random_rev_search(b: &mut Bencher) {
 
 #[inline]
 fn is_pow_10_simple_u16(v: u16) -> bool {
-    v == 1 || v == 10 || v == 100 || 
-        v == 1_000 || v == 10_000
+    v == 1 || v == 10 || v == 100 || v == 1_000 || v == 10_000
 }
 
 #[inline]
@@ -296,13 +371,14 @@ fn is_pow_10_rev_search_u16(v: u16) -> bool {
         return v == 1;
     }
     false
-    
 }
 
 fn random_10000_vec_u16() -> Vec<u16> {
     let mut v = Vec::new();
     let mut x: u16 = 0;
-    let mut rng = SplitMix { v: 0xCAFE_1234_FEED_5678 };
+    let mut rng = SplitMix {
+        v: 0xCAFE_1234_FEED_5678,
+    };
     while x < 10000 {
         v.push(rng.next_u16());
         x += 1;
@@ -351,7 +427,7 @@ fn is_pow_10_simple_u8(v: u8) -> bool {
     v == 1 || v == 10 || v == 100
 }
 
-static POWER10_HASH_U8: [u32;8] = [1,1,10,0,100,0,0,0];
+static POWER10_HASH_U8: [u32; 8] = [1, 1, 10, 0, 100, 0, 0, 0];
 
 #[inline]
 fn is_pow_10_hash_u8(v: u8) -> bool {
@@ -362,7 +438,9 @@ fn is_pow_10_hash_u8(v: u8) -> bool {
 fn random_10000_vec_u8() -> Vec<u8> {
     let mut v = Vec::new();
     let mut x: u32 = 0;
-    let mut rng = SplitMix { v: 0xCAFE_1234_FEED_5678 };
+    let mut rng = SplitMix {
+        v: 0xCAFE_1234_FEED_5678,
+    };
     while x < 10000 {
         v.push(rng.next_u8());
         x += 1;
@@ -404,7 +482,9 @@ fn powers_10_vec<T: PrimInt + One>() -> Vec<T> {
 
 #[inline]
 fn bench_pow10_slice<T: Power10 + Copy, F>(b: &mut Bencher, slice: &[T], func: F)
-    where F: Fn(T) -> bool {
+where
+    F: Fn(T) -> bool,
+{
     b.iter(|| {
         let mut sum = 0;
         for i in slice.iter() {
@@ -418,7 +498,9 @@ fn bench_pow10_slice<T: Power10 + Copy, F>(b: &mut Bencher, slice: &[T], func: F
 
 #[inline]
 fn bench_log10_slice<T: Power10 + Copy, F>(b: &mut Bencher, slice: &[T], func: F)
-    where F: Fn(T) -> u32 {
+where
+    F: Fn(T) -> u32,
+{
     b.iter(|| {
         let mut sum = 0;
         for i in slice.iter() {
@@ -428,19 +510,16 @@ fn bench_log10_slice<T: Power10 + Copy, F>(b: &mut Bencher, slice: &[T], func: F
     });
 }
 
-
-
 struct SplitMix {
     v: u64,
 }
 
 impl SplitMix {
-
     #[inline]
     pub fn next_u8(&mut self) -> u8 {
         self.next_u64() as u8
     }
-    
+
     #[inline]
     pub fn next_u16(&mut self) -> u16 {
         self.next_u64() as u16
